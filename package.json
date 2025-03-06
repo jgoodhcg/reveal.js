@@ -10,7 +10,8 @@
   "scripts": {
     "test": "gulp test",
     "start": "gulp serve",
-    "build": "gulp build"
+    "build": "gulp build",
+    "dashboard": "node presentation-server.js"
   },
   "author": {
     "name": "Hakim El Hattab",
@@ -29,6 +30,9 @@
     "slides",
     "presentation"
   ],
+  "dependencies": {
+    "express": "^4.18.3"
+  },
   "devDependencies": {
     "@babel/core": "^7.23.2",
     "@babel/eslint-parser": "^7.22.15",
