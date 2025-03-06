@@ -52,6 +52,31 @@ app.use('/external-md', (req, res, next) => {
   });
 });
 
+// Serve static assets (images, etc.) from presentations directory
+app.use('/external-assets', (req, res, next) => {
+  // Security check: prevent directory traversal attacks
+  const requestedPath = req.path;
+  const normalizedPath = path.normalize(requestedPath);
+  
+  if (normalizedPath.includes('..')) {
+    return res.status(403).send('Access denied');
+  }
+  
+  // Get absolute path to presentations directory
+  const presentationsDirPath = path.resolve(CONFIG.baseDir, CONFIG.presentationsDir);
+  
+  // Resolve the full path to the asset
+  const assetPath = path.join(presentationsDirPath, normalizedPath);
+  
+  // Check if file exists and serve it
+  fs.access(assetPath, fs.constants.R_OK, (err) => {
+    if (err) {
+      return res.status(404).send('Asset not found');
+    }
+    res.sendFile(assetPath);
+  });
+});
+
 // API endpoint to get all presentations
 app.get('/api/presentations', (req, res) => {
   loadPresentations()
@@ -61,6 +86,21 @@ app.get('/api/presentations', (req, res) => {
     .catch(err => {
       console.error('Error loading presentations:', err);
       res.status(500).json({ error: 'Failed to load presentations' });
+    });
+});
+
+// API endpoint to manually refresh the presentation cache
+app.get('/api/refresh', (req, res) => {
+  // Set cache to null to force reload
+  presentationCache = null;
+  
+  loadPresentations()
+    .then(presentations => {
+      res.json({ success: true, count: presentations.length });
+    })
+    .catch(err => {
+      console.error('Error refreshing presentations:', err);
+      res.status(500).json({ error: 'Failed to refresh presentations' });
     });
 });
 
