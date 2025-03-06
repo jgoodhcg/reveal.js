@@ -62,11 +62,36 @@
         .presentation a:hover {
             background-color: #0063b1;
         }
+        .dashboard-controls {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        #refresh-button {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 6px 12px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        #refresh-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+        }
     </style>
 </head>
 <body>
     <div class="dashboard">
         <h1>Presentation Dashboard</h1>
+        <div class="dashboard-controls">
+            <button id="refresh-button">↻ Refresh</button>
+        </div>
         <div class="presentations" id="presentations-container">
             <!-- Presentations will be loaded here dynamically -->
             <div class="presentation">
@@ -77,7 +102,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function loadPresentations() {
             try {
                 const response = await fetch('/api/presentations');
                 const presentations = await response.json();
@@ -110,6 +135,41 @@
                     </div>
                 `;
             }
+        }
+        
+        async function refreshPresentations() {
+            const refreshButton = document.getElementById('refresh-button');
+            refreshButton.textContent = '↻ Refreshing...';
+            refreshButton.disabled = true;
+            
+            try {
+                // Call the refresh endpoint
+                await fetch('/api/refresh');
+                
+                // Reload presentations
+                await loadPresentations();
+                
+                refreshButton.textContent = '✓ Done';
+                setTimeout(() => {
+                    refreshButton.textContent = '↻ Refresh';
+                    refreshButton.disabled = false;
+                }, 2000);
+            } catch (error) {
+                console.error('Error refreshing presentations:', error);
+                refreshButton.textContent = '✗ Failed';
+                setTimeout(() => {
+                    refreshButton.textContent = '↻ Refresh';
+                    refreshButton.disabled = false;
+                }, 2000);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load presentations initially
+            await loadPresentations();
+            
+            // Set up refresh button
+            document.getElementById('refresh-button').addEventListener('click', refreshPresentations);
         });
     </script>
 </body>
